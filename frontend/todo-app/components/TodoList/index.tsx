@@ -38,6 +38,7 @@ export const TodoList = () => {
       console.error("Error creating todo:", error.message);
     },
   });
+
   const { mutate: clearAllTodos } = useMutation({
     mutationFn: deleteAllToDos,
     onMutate: async () => {
@@ -54,10 +55,7 @@ export const TodoList = () => {
       _,
       context: { previousTodos: ToDo[] } | undefined
     ) => {
-      if (context?.previousTodos) {
-        queryClient.setQueryData<ToDo[]>(["todos"], context.previousTodos);
-      }
-      console.error("Error clearing all todos:", err);
+      console.error("Error clearing all todos:", err, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
@@ -68,6 +66,7 @@ export const TodoList = () => {
     mutationFn: deleteToDoById,
     onMutate: async (id: number) => {
       await queryClient.cancelQueries({ queryKey: ["todos"] });
+
       const previousTodos = queryClient.getQueryData<ToDo[]>(["todos"]) || [];
 
       queryClient.setQueryData<ToDo[]>(["todos"], (old = []) =>
@@ -81,10 +80,7 @@ export const TodoList = () => {
       id: number,
       context: { previousTodos: ToDo[] } | undefined
     ) => {
-      if (context?.previousTodos) {
-        queryClient.setQueryData(["todos"], context.previousTodos);
-      }
-      console.error("Error deleting todo:", err);
+      console.error("Error deleting todo:", err, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
