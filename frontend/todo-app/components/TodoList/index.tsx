@@ -10,6 +10,7 @@ import {
   deleteToDoById,
   toggleToDoCompletion,
   deleteAllToDos,
+  ToDo,
 } from "../../lib/api";
 import { useState } from "react";
 
@@ -30,53 +31,63 @@ export const TodoList = () => {
   const { mutate: addTodo } = useMutation({
     mutationFn: createToDo,
     onSuccess: () => {
-      queryClient.invalidateQueries(["todos"] as any);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
       setNewTodoTitle("");
     },
     onError: (error: Error) => {
       console.error("Error creating todo:", error.message);
     },
   });
-
   const { mutate: clearAllTodos } = useMutation({
     mutationFn: deleteAllToDos,
     onMutate: async () => {
-      await queryClient.cancelQueries(["todos"] as any);
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
 
-      const previousTodos = queryClient.getQueryData(["todos"]);
+      const previousTodos = queryClient.getQueryData<ToDo[]>(["todos"]) || [];
 
-      queryClient.setQueryData(["todos"], []);
+      queryClient.setQueryData<ToDo[]>(["todos"], []);
 
       return { previousTodos };
     },
-    onError: (err: Error, _, context: any) => {
-      queryClient.setQueryData(["todos"], context.previousTodos);
+    onError: (
+      err: Error,
+      _,
+      context: { previousTodos: ToDo[] } | undefined
+    ) => {
+      if (context?.previousTodos) {
+        queryClient.setQueryData<ToDo[]>(["todos"], context.previousTodos);
+      }
       console.error("Error clearing all todos:", err);
     },
     onSettled: () => {
-      queryClient.invalidateQueries(["todos"] as any);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
   const { mutate: deleteTodo } = useMutation({
     mutationFn: deleteToDoById,
     onMutate: async (id: number) => {
-      await queryClient.cancelQueries(["todos"] as any);
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+      const previousTodos = queryClient.getQueryData<ToDo[]>(["todos"]) || [];
 
-      const previousTodos = queryClient.getQueryData(["todos"]);
-
-      queryClient.setQueryData(["todos"], (old: any) =>
-        old.filter((todo: any) => todo.id !== id)
+      queryClient.setQueryData<ToDo[]>(["todos"], (old = []) =>
+        old.filter((todo) => todo.id !== id)
       );
 
       return { previousTodos };
     },
-    onError: (err: Error, id: number, context: any) => {
-      queryClient.setQueryData(["todos"], context.previousTodos);
+    onError: (
+      err: Error,
+      id: number,
+      context: { previousTodos: ToDo[] } | undefined
+    ) => {
+      if (context?.previousTodos) {
+        queryClient.setQueryData(["todos"], context.previousTodos);
+      }
       console.error("Error deleting todo:", err);
     },
     onSettled: () => {
-      queryClient.invalidateQueries(["todos"] as any);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
@@ -88,7 +99,7 @@ export const TodoList = () => {
     console.log("Toggling todo", id, completed);
     toggleToDoCompletion(id, !completed)
       .then(() => {
-        queryClient.invalidateQueries(["todos"] as any);
+        queryClient.invalidateQueries({ queryKey: ["todos"] });
       })
       .catch((error) => {
         console.error("Error toggling todo:", error);
@@ -120,7 +131,7 @@ export const TodoList = () => {
           onChange={(e) => setNewTodoTitle(e.target.value)}
         />
         <Button
-          className="bg-purple-500 text-white p-2 rounded-md ml-2"
+          className="bg-purple-500 text-white p-2 rounded-md ml-2 hover:bg-indigo-500"
           onClick={handleAddTodo}
         >
           <Plus width="30" height="30" />
@@ -142,7 +153,7 @@ export const TodoList = () => {
           tasks
         </p>
         <Button
-          className="bg-purple-500 text-white p-2 rounded-md w-20 h-8"
+          className="bg-purple-500 text-white p-2 rounded-md w-20 h-8  hover:bg-indigo-500"
           onClick={handleClearAll}
         >
           Clear All
