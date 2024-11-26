@@ -52,10 +52,12 @@ class ToDoDetail(APIView):
         except ToDo.DoesNotExist:
             return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ToDoSerializer(todo, data=request.data)
+        serializer = ToDoSerializer(todo, data=request.data, partial=True)
+
         if serializer.is_valid():
-            serializer.save()
+            serializer.save()  
             return Response(serializer.data)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
