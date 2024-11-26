@@ -125,6 +125,11 @@ export const TodoList = () => {
           className="w-full p-2 border border-gray-300 rounded-md"
           value={newTodoTitle}
           onChange={(e) => setNewTodoTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleAddTodo();
+            }
+          }}
         />
         <Button
           className="bg-purple-500 text-white p-2 rounded-md ml-2 hover:bg-indigo-500"
