@@ -1,8 +1,9 @@
+import { ToDo } from "@/lib/api";
 import { Todo } from "../Todo";
 import { ScrollArea } from "../ui/scroll-area";
 
 interface TodoListScrollProps {
-  todos: Array<{ id: number; title: string; completed: boolean }>;
+  todos: Array<ToDo>;
   handleDelete: (id: number) => void;
   handleToggle: (id: number, completed: boolean) => void;
   isLoading: boolean;
@@ -26,9 +27,14 @@ export const TodoListScroll: React.FC<TodoListScrollProps> = ({
     return <div>Error: {(error as Error).message}</div>;
   }
 
+  const sortedTodos = todos.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
   return (
     <ScrollArea className="mt-4 h-52">
-      {todos?.map((todo) => (
+      {sortedTodos.map((todo) => (
         <Todo
           id={todo.id}
           key={todo.id}
